@@ -1,0 +1,40 @@
+import requests
+import datetime as dt
+import pandas as pd
+
+country_list_usd = [["Country", "USD"],["Brazil",""],["South Africa", "ZAR"],["Australia", "AUD"], ["Argentina","ARS"], ["Canada", "CAD"], ["Chile", "CLP"], ["China", "CNY"], ["Euro", "EUR"], ["Great-Britain", "GBP"] ,["Japan", "JPY"], ["Mexico", "MXN"], ["Norway", "NOK"], ["New Zealand", "NZD"], ["Russia", "RUB"], ["Sweden" ,"SEK"], ["Swiss", "CHF"], ["Turkey", "TRY"]] #YF
+country_list_brl = [["Country", "BRL"],["USA",""],["South Africa", "ZAR"],["Australia", "AUD"], ["Argentina","ARB"], ["Canada", "CAD"], ["Chile", "CLP"], ["China", "CNH"], ["Euro", "EUR"], ["Great-Britain", "GBP"] ,["Japan", "JPY"], ["Mexico", "MXN"], ["Norway", "NOK"], ["New Zealand", "NZL"], ["Russia", "RUB"], ["Sweden" ,"SEK"], ["Swiss", "CHF"], ["Turkey", "TRY"]] #YF
+
+#
+start_d = "2002-01-01"
+end_d = "2022-12-31"
+base = "USD"
+#
+
+period_y = int((end_d.split("-")[0])) - int((start_d.split("-")[0]))
+tickers_list = [x for l in country_list_usd for x in l if len(x)==3]
+hist_data = pd.DataFrame()
+
+for tick in tickers_list:
+    data_c = {}
+    col = 0
+    for t in range(0,period_y+1):
+        strt = start_d.split("-")
+
+        if t == period_y:
+            s_data = "-".join([str(int(strt[0]) + t), strt[1], strt[2]])
+            e_data = end_d
+        else:
+            s_data = "-".join([str(int(strt[0]) + t), strt[1], strt[2]])
+            e_data = "-".join([str(int(strt[0]) + t+1), strt[1], strt[2]])
+
+        url = 'https://api.exchangerate.host/timeseries?start_date=' + s_data + "&end_date="+e_data+"&base="+base+"&symbols="+tick
+        response = requests.get(url)
+        data = response.json()
+        data_c = data_c|data['rates']
+    hist_data.insert(col, column = tick,  value = [list(x.values())[0] for x in list(data_c.values())])
+    col+=1
+    
+tab = pd.DataFrame(hist_data)
+tab.index = data_c.keys()
+
